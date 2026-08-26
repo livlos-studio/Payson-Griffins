@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team 6 Orange · Game Day Rotations</title>
+<style>
+  :root {
+    --orange: #E8650A;
+    --orange-light: #FEF0E6;
+    --orange-mid: #F5A46B;
+    --orange-dark: #B34D06;
+    --green: #2D7A3A;
+    --green-light: #EAF5EC;
+    --bg: #F7F5F2;
+    --surface: #FFFFFF;
+    --border: #E4DED6;
+    --text: #1A1A18;
+    --text-2: #5C5952;
+    --text-3: #9A948D;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--orange);
+    color: #fff;
+    padding: 18px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .header p { font-size: 12px; opacity: 0.85; margin-top: 1px; }
+
+  /* SCREENS */
+  .screen { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+
+  /* PLAYER CHECKBOXES */
+  .player-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .player-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    user-select: none;
+  }
+  .player-check.selected {
+    border-color: var(--orange);
+    background: var(--orange-light);
+  }
+  .player-check input { display: none; }
+  .check-box {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .player-check.selected .check-box {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .check-box::after {
+    content: '';
+    width: 5px; height: 9px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(45deg) translate(-1px, -1px);
+    display: none;
+  }
+  .player-check.selected .check-box::after { display: block; }
+  .player-info { flex: 1; }
+  .player-num { font-size: 10px; color: var(--text-3); font-weight: 600; }
+  .player-name { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  /* GOALIE SELECTOR */
+  .goalie-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+  .goalie-btn {
+    padding: 8px 4px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    transition: all .15s;
+  }
+  .goalie-btn:hover { border-color: var(--orange-mid); }
+  .goalie-btn.selected {
+    border-color: var(--orange);
+    background: var(--orange-light);
+    color: var(--orange-dark);
+  }
+  .goalie-btn .g-num { font-size: 10px; color: var(--text-3); display: block; margin-bottom: 2px; }
+  .goalie-btn.selected .g-num { color: var(--orange-mid); }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .2px;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: var(--orange-dark); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-3); cursor: not-allowed; }
+  .btn-secondary {
+    padding: 10px 18px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-secondary:hover { background: var(--bg); }
+
+  .select-all-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+  .link-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 12px; color: var(--orange); font-weight: 600; padding: 0;
+  }
+
+  /* SHIFT CARDS */
+  .shift-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .shift-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .shift-num {
+    width: 28px; height: 28px;
+    background: var(--orange);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .shift-meta { flex: 1; }
+  .shift-label { font-size: 13px; font-weight: 700; color: var(--text); }
+  .shift-time { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .half-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--orange-light);
+    color: var(--orange-dark);
+  }
+  .shift-body { padding: 10px 14px; }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    min-width: 36px;
+  }
+  .player-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .player-pill.gk-pill {
+    background: var(--orange-light);
+    border-color: var(--orange-mid);
+    color: var(--orange-dark);
+  }
+  .pill-num { font-size: 10px; opacity: .7; }
+
+  /* HALFTIME DIVIDER */
+  .halftime-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .halftime-bar::before, .halftime-bar::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .halftime-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* TOTALS TABLE */
+  .totals-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .totals-table th {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-3);
+    padding: 0 0 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .totals-table th:last-child, .totals-table td:last-child { text-align: right; }
+  .totals-table td {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .totals-table tr:last-child td { border-bottom: none; }
+  .tot-name { font-weight: 600; color: var(--text); }
+  .tot-num { color: var(--text-3); font-size: 11px; margin-right: 4px; }
+  .tot-mins {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .tot-gk {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: var(--orange-light);
+    color: var(--orange-dark);
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; display: inline-block; margin-right: 8px; vertical-align: middle; }
+  .bar-fill { height: 100%; background: var(--orange); border-radius: 3px; }
+
+  /* TOP NAV ON RESULTS */
+  .top-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+  .top-actions .back { flex-shrink: 0; }
+  .top-actions .game-info { flex: 1; font-size: 13px; color: var(--text-2); }
+  .top-actions .game-info strong { color: var(--text); }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    background: var(--orange);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    gap: 20px;
+    margin-bottom: 14px;
+  }
+  .sbar-item { text-align: center; }
+  .sbar-val { font-size: 20px; font-weight: 700; }
+  .sbar-lbl { font-size: 10px; opacity: .8; text-transform: uppercase; letter-spacing: .05em; margin-top: 1px; }
+
+  @media (max-width: 400px) {
+    .goalie-grid { grid-template-columns: repeat(4, 1fr); }
+    .player-grid { grid-template-columns: 1fr 1fr; }
+    .bar-wrap { width: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">⚽</div>
+  <div>
+    <h1>Team 6 · Orange</h1>
+    <p>Coach Mitchell Maylett · Game Day Rotations</p>
+  </div>
+</div>
+
+<!-- SCREEN 1: SELECT PLAYERS -->
+<div class="screen active" id="screen-players">
+  <div style="padding: 14px 0 10px;">
+    <p style="font-size:15px;font-weight:700;color:var(--text);">Who's here today?</p>
+    <p style="font-size:13px;color:var(--text-2);margin-top:3px;">Check off the players that showed up.</p>
+  </div>
+
+  <div class="card">
+    <div class="select-all-row">
+      <button class="link-btn" onclick="toggleAll()">Select all</button>
+    </div>
+    <div class="player-grid" id="player-grid"></div>
+  </div>
+
+  <button class="btn-primary" id="btn-next-1" onclick="goToGoalie()" disabled>
+    Continue →
+  </button>
+</div>
+
+<!-- SCREEN 2: GOALIE PREFERENCES -->
+<div class="screen" id="screen-goalie">
+  <div style="padding: 14px 0 10px;">
+    <p style="font-size:15px;font-weight:700;color:var(--text);">Who wants to play goalie?</p>
+    <p style="font-size:13px;color:var(--text-2);margin-top:3px;">Select everyone who's willing. The rotation will spread GK time evenly among them.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Select goalie-willing players</div>
+    <div class="goalie-grid" id="goalie-grid"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="btn-secondary" onclick="goTo('screen-players')">← Back</button>
+    <button class="btn-primary" id="btn-generate" onclick="generateSchedule()" style="flex:1" disabled>
+      Generate shifts
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN 3: RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="top-actions">
+    <button class="btn-secondary back" onclick="goTo('screen-goalie')">← Edit</button>
+    <div class="game-info" id="game-info-label"></div>
+  </div>
+
+  <div class="summary-bar" id="summary-bar"></div>
+
+  <div id="shifts-container"></div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Playing time totals</div>
+    <table class="totals-table" id="totals-table"></table>
+  </div>
+
+  <div style="padding-bottom:30px;"></div>
+</div>
+
+<script>
+const ALL_PLAYERS = [
+  { num: '01', name: 'Benson' },
+  { num: '02', name: 'Milo' },
+  { num: '03', name: 'Zayn' },
+  { num: '04', name: 'Oliver' },
+  { num: '05', name: 'Jade' },
+  { num: '06', name: 'Watson' },
+  { num: '07', name: 'Leland' },
+  { num: '08', name: 'Sebastian' },
+];
+
+const SEG_MIN = 3;
+const HALF_MIN = 15;
+const SEGS_PER_HALF = Math.floor(HALF_MIN / SEG_MIN); // 5
+
+let selectedPlayers = new Set();
+let goalieWilling = new Set();
+
+// --- BUILD PLAYER SELECT SCREEN ---
+function buildPlayerGrid() {
+  const grid = document.getElementById('player-grid');
+  grid.innerHTML = '';
+  ALL_PLAYERS.forEach((p, i) => {
+    const div = document.createElement('label');
+    div.className = 'player-check';
+    div.dataset.idx = i;
+    div.innerHTML = `
+      <input type="checkbox">
+      <div class="check-box"></div>
+      <div class="player-info">
+        <div class="player-num">#${p.num}</div>
+        <div class="player-name">${p.name}</div>
+      </div>`;
+    div.addEventListener('click', () => togglePlayer(i, div));
+    grid.appendChild(div);
+  });
+}
+
+function togglePlayer(idx, el) {
+  if (selectedPlayers.has(idx)) {
+    selectedPlayers.delete(idx);
+    goalieWilling.delete(idx);
+    el.classList.remove('selected');
+  } else {
+    selectedPlayers.add(idx);
+    el.classList.add('selected');
+  }
+  document.getElementById('btn-next-1').disabled = selectedPlayers.size < 5;
+}
+
+function toggleAll() {
+  const allSelected = selectedPlayers.size === ALL_PLAYERS.length;
+  selectedPlayers.clear();
+  if (!allSelected) ALL_PLAYERS.forEach((_, i) => selectedPlayers.add(i));
+  document.querySelectorAll('.player-check').forEach((el, i) => {
+    el.classList.toggle('selected', !allSelected);
+  });
+  document.getElementById('btn-next-1').disabled = selectedPlayers.size < 5;
+}
+
+// --- GOALIE SCREEN ---
+function buildGoalieGrid() {
+  const grid = document.getElementById('goalie-grid');
+  grid.innerHTML = '';
+  goalieWilling.clear();
+  const players = [...selectedPlayers].sort((a,b) => a-b);
+  players.forEach(idx => {
+    const p = ALL_PLAYERS[idx];
+    const btn = document.createElement('button');
+    btn.className = 'goalie-btn';
+    btn.dataset.idx = idx;
+    btn.innerHTML = `<span class="g-num">#${p.num}</span>${p.name}`;
+    btn.addEventListener('click', () => {
+      if (goalieWilling.has(idx)) {
+        goalieWilling.delete(idx);
+        btn.classList.remove('selected');
+      } else {
+        goalieWilling.add(idx);
+        btn.classList.add('selected');
+      }
+      document.getElementById('btn-generate').disabled = goalieWilling.size === 0;
+    });
+    grid.appendChild(btn);
+  });
+  document.getElementById('btn-generate').disabled = true;
+}
+
+function goToGoalie() {
+  buildGoalieGrid();
+  goTo('screen-goalie');
+}
+
+// --- ROTATION ALGORITHM ---
+function generateSchedule() {
+  const players = [...selectedPlayers].sort((a,b) => a-b);
+  const goalies = [...goalieWilling];
+  const n = players.length;
+  const total = SEGS_PER_HALF * 2;
+
+  let fieldCnt = new Array(n).fill(0);
+  let gkCnt = new Array(n).fill(0);
+  // Map player global idx to local idx within this game's roster
+  const localIdx = idx => players.indexOf(idx);
+
+  const segs = [];
+
+  for (let s = 0; s < total; s++) {
+    // Pick goalie from willing list, least stints first, tiebreak by least field time
+    let gkGlobal = goalies.reduce((best, g) => {
+      const li = localIdx(g), lb = localIdx(best);
+      if (gkCnt[li] < gkCnt[lb]) return g;
+      if (gkCnt[li] === gkCnt[lb] && fieldCnt[li] < fieldCnt[lb]) return g;
+      return best;
+    }, goalies[0]);
+
+    const gkLoc = localIdx(gkGlobal);
+    gkCnt[gkLoc]++;
+    fieldCnt[gkLoc]++;
+
+    // Field: remaining players sorted by least field time
+    const rest = players
+      .filter(p => p !== gkGlobal)
+      .sort((a, b) => {
+        const la = localIdx(a), lb = localIdx(b);
+        return fieldCnt[la] - fieldCnt[lb] || la - lb;
+      });
+
+    const onField = rest.slice(0, 4);
+    const bench = rest.slice(4);
+    onField.forEach(p => fieldCnt[localIdx(p)]++);
+
+    segs.push({
+      gk: gkGlobal,
+      field: onField,
+      bench,
+      fc: [...fieldCnt],
+      gc: [...gkCnt],
+    });
+  }
+
+  renderResults(segs, players);
+  goTo('screen-results');
+}
+
+function renderResults(segs, players) {
+  // Summary bar
+  const totalMins = HALF_MIN * 2;
+  const shiftCount = segs.length;
+  const goalieCount = [...goalieWilling].length;
+  document.getElementById('summary-bar').innerHTML = `
+    <div class="sbar-item"><div class="sbar-val">${shiftCount}</div><div class="sbar-lbl">Shifts</div></div>
+    <div class="sbar-item"><div class="sbar-val">${SEG_MIN}m</div><div class="sbar-lbl">Per shift</div></div>
+    <div class="sbar-item"><div class="sbar-val">${players.length}</div><div class="sbar-lbl">Players</div></div>
+    <div class="sbar-item"><div class="sbar-val">${goalieCount}</div><div class="sbar-lbl">GK rotation</div></div>`;
+
+  document.getElementById('game-info-label').innerHTML =
+    `<strong>${players.length} players</strong> · ${totalMins} min game`;
+
+  // Shifts
+  const container = document.getElementById('shifts-container');
+  container.innerHTML = '';
+
+  segs.forEach((seg, i) => {
+    if (i === SEGS_PER_HALF) {
+      const bar = document.createElement('div');
+      bar.className = 'halftime-bar';
+      bar.innerHTML = `<span class="halftime-label">Halftime</span>`;
+      container.appendChild(bar);
+    }
+
+    const halfNum = i < SEGS_PER_HALF ? 1 : 2;
+    const localI = i < SEGS_PER_HALF ? i : i - SEGS_PER_HALF;
+    const startMin = localI * SEG_MIN;
+    const endMin = Math.min(startMin + SEG_MIN, HALF_MIN);
+    const gkP = ALL_PLAYERS[seg.gk];
+
+    const card = document.createElement('div');
+    card.className = 'shift-card';
+
+    const fieldNames = seg.field.map(idx => {
+      const p = ALL_PLAYERS[idx];
+      return `<span class="player-pill"><span class="pill-num">#${p.num}</span>${p.name}</span>`;
+    }).join('');
+
+    const benchNames = seg.bench.length > 0
+      ? seg.bench.map(idx => {
+          const p = ALL_PLAYERS[idx];
+          return `<span class="player-pill"><span class="pill-num">#${p.num}</span>${p.name}</span>`;
+        }).join('')
+      : '<span style="font-size:12px;color:var(--text-3)">No bench</span>';
+
+    card.innerHTML = `
+      <div class="shift-header">
+        <div class="shift-num">${i + 1}</div>
+        <div class="shift-meta">
+          <div class="shift-label">Shift ${i + 1}</div>
+          <div class="shift-time">${halfNum === 1 ? '1st' : '2nd'} half · min ${startMin}–${endMin}</div>
+        </div>
+        <span class="half-badge">${halfNum === 1 ? '1st' : '2nd'}</span>
+      </div>
+      <div class="shift-body">
+        <div class="field-row">
+          <span class="field-label">GK</span>
+          <span class="player-pill gk-pill"><span class="pill-num">#${gkP.num}</span>${gkP.name}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Field</span>
+          ${fieldNames}
+        </div>
+        ${seg.bench.length > 0 ? `<div class="field-row" style="margin-bottom:0">
+          <span class="field-label" style="color:var(--text-3)">Bench</span>
+          ${benchNames}
+        </div>` : ''}
+      </div>`;
+    container.appendChild(card);
+  });
+
+  // Totals table
+  const lastSeg = segs[segs.length - 1];
+  const maxFieldMins = Math.max(...lastSeg.fc) * SEG_MIN;
+  const table = document.getElementById('totals-table');
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th style="text-align:left">Time</th>
+        <th>Field mins</th>
+      </tr>
+    </thead>
+    <tbody id="totals-body"></tbody>`;
+
+  const tbody = table.querySelector('tbody');
+  const localIdx = idx => players.indexOf(idx);
+
+  players.forEach(idx => {
+    const p = ALL_PLAYERS[idx];
+    const li = localIdx(idx);
+    const mins = lastSeg.fc[li] * SEG_MIN;
+    const gkMins = lastSeg.gc[li] * SEG_MIN;
+    const pct = maxFieldMins > 0 ? Math.round((mins / maxFieldMins) * 100) : 0;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="tot-num">#${p.num}</span><span class="tot-name">${p.name}</span>${gkMins > 0 ? `<span class="tot-gk">GK ${gkMins}m</span>` : ''}</td>
+      <td><span class="bar-wrap"><span class="bar-fill" style="width:${pct}%"></span></span></td>
+      <td><span class="tot-mins">${mins}m</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+buildPlayerGrid();
+</script>
+</body>
+</html>
