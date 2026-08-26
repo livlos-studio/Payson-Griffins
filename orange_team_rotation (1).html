@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maylett's Griffins · Game Day Rotations</title>
+<style>
+  :root {
+    --orange: #E8650A;
+    --orange-light: rgba(232,101,10,0.15);
+    --orange-mid: #F5A46B;
+    --orange-dark: #B34D06;
+    --bg: #000000;
+    --surface: #161616;
+    --surface2: #2A2A2A;
+    --border: #333333;
+    --border2: #444444;
+    --text: #F0EDE8;
+    --text-2: #A09A93;
+    --text-3: #666660;
+    --radius: 10px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: #0D0D0D;
+    border-bottom: 1px solid var(--border);
+    color: #fff;
+    padding: 18px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: var(--orange);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+  .header p { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+  .screen { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  .screen-heading { padding: 14px 0 10px; }
+  .screen-heading p:first-child { font-size: 15px; font-weight: 700; color: var(--text); }
+  .screen-heading p:last-child { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-3);
+    margin-bottom: 12px;
+  }
+
+  .player-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .player-tile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px;
+    border: 1.5px solid var(--border2);
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--surface2);
+    transition: border-color .12s, background .12s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .player-tile.selected {
+    border-color: var(--orange);
+    background: var(--orange-light);
+  }
+  .check-box {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border2);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface);
+    transition: background .12s, border-color .12s;
+  }
+  .player-tile.selected .check-box {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .checkmark {
+    display: none;
+    width: 5px; height: 9px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(45deg) translate(-1px,-1px);
+  }
+  .player-tile.selected .checkmark { display: block; }
+  .player-name { font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+  .player-tile.selected .player-name { color: var(--orange-mid); }
+  .star-badge {
+    font-size: 14px;
+    opacity: 0.6;
+  }
+  .player-tile.selected .star-badge { opacity: 1; }
+
+  .select-all-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .select-all-row span { font-size: 12px; color: var(--text-3); }
+  .link-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 13px; color: var(--orange); font-weight: 700; padding: 4px 0;
+    touch-action: manipulation;
+  }
+
+  .goalie-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+  .goalie-btn {
+    padding: 10px 4px;
+    border: 1.5px solid var(--border2);
+    border-radius: 8px;
+    background: var(--surface2);
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-2);
+    transition: all .12s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .goalie-btn.selected {
+    border-color: var(--orange);
+    background: var(--orange-light);
+    color: var(--orange-mid);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 15px;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .2px;
+    transition: background .12s;
+    touch-action: manipulation;
+  }
+  .btn-primary:active { background: var(--orange-dark); }
+  .btn-primary:disabled { background: var(--surface2); color: var(--text-3); cursor: not-allowed; border: 1px solid var(--border); }
+  .btn-secondary {
+    padding: 12px 18px;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s;
+    touch-action: manipulation;
+  }
+  .btn-secondary:active { background: var(--border); }
+
+  .summary-bar {
+    background: var(--orange);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    gap: 0;
+    margin-bottom: 14px;
+  }
+  .sbar-item { text-align: center; flex: 1; }
+  .sbar-item + .sbar-item { border-left: 1px solid rgba(255,255,255,0.25); }
+  .sbar-val { font-size: 22px; font-weight: 800; color: #fff; }
+  .sbar-lbl { font-size: 10px; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+  .shift-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .shift-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .shift-num {
+    width: 30px; height: 30px;
+    background: var(--orange);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .shift-meta { flex: 1; }
+  .shift-label { font-size: 13px; font-weight: 700; color: var(--text); }
+  .shift-time { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .half-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(232,101,10,0.2);
+    color: var(--orange-mid);
+    border: 1px solid rgba(232,101,10,0.3);
+  }
+  .shift-body { padding: 10px 14px; }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 7px;
+  }
+  .field-row:last-child { margin-bottom: 0; }
+  .field-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    min-width: 38px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .player-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .player-pill.gk-pill {
+    background: rgba(232,101,10,0.18);
+    border-color: rgba(232,101,10,0.5);
+    color: var(--orange-mid);
+    font-weight: 700;
+  }
+  .player-pill.oliver-pill {
+    border-color: rgba(255, 210, 100, 0.5);
+    background: rgba(255, 210, 100, 0.1);
+    color: #FFD264;
+    font-weight: 700;
+  }
+
+  .halftime-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .halftime-bar::before, .halftime-bar::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border2);
+  }
+  .halftime-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .totals-table { width: 100%; border-collapse: collapse; }
+  .totals-table th {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-3);
+    padding: 0 0 10px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .totals-table th:last-child, .totals-table td:last-child { text-align: right; }
+  .totals-table td { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .totals-table tr:last-child td { border-bottom: none; }
+  .tot-name { font-weight: 600; color: var(--text); }
+  .tot-mins { font-weight: 800; font-size: 14px; color: var(--text); }
+  .tot-gk {
+    display: inline-block; font-size: 10px; padding: 2px 6px;
+    border-radius: 999px; background: rgba(232,101,10,0.18);
+    color: var(--orange-mid); font-weight: 700; margin-left: 5px;
+    border: 1px solid rgba(232,101,10,0.3);
+  }
+  .tot-oliver {
+    display: inline-block; font-size: 10px; padding: 2px 6px;
+    border-radius: 999px; background: rgba(255,210,100,0.15);
+    color: #FFD264; font-weight: 700; margin-left: 5px;
+    border: 1px solid rgba(255,210,100,0.3);
+  }
+  .bar-wrap { width: 80px; height: 5px; background: var(--border2); border-radius: 3px; overflow: hidden; display: inline-block; margin-right: 8px; vertical-align: middle; }
+  .bar-fill { height: 100%; background: var(--orange); border-radius: 3px; }
+
+  .top-actions { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+  .top-actions .game-info { flex: 1; font-size: 13px; color: var(--text-2); }
+  .top-actions .game-info strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">⚽</div>
+  <div>
+    <h1>Maylett's Griffins</h1>
+    <p>Coach Mitchell Maylett · Game Day Rotations</p>
+  </div>
+</div>
+
+<!-- SCREEN 1: SELECT PLAYERS -->
+<div class="screen active" id="screen-players">
+  <div class="screen-heading">
+    <p>Who's here today?</p>
+    <p>Tap each player that showed up.</p>
+  </div>
+  <div class="card">
+    <div class="select-all-row">
+      <span id="selected-count">0 selected</span>
+      <button class="link-btn" id="toggle-all-btn" onclick="toggleAll()">Select all</button>
+    </div>
+    <div class="player-grid" id="player-grid"></div>
+  </div>
+  <button class="btn-primary" id="btn-next-1" onclick="goToGoalie()" disabled>Continue →</button>
+</div>
+
+<!-- SCREEN 2: GOALIE PREFERENCES -->
+<div class="screen" id="screen-goalie">
+  <div class="screen-heading">
+    <p>Who's willing to play goalie?</p>
+    <p>Tap everyone who's okay with GK. Time gets split evenly among them.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Tap to select</div>
+    <div class="goalie-grid" id="goalie-grid"></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-secondary" onclick="goTo('screen-players')">← Back</button>
+    <button class="btn-primary" id="btn-generate" onclick="generateSchedule()" style="flex:1" disabled>Generate shifts</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="top-actions">
+    <button class="btn-secondary" onclick="goTo('screen-goalie')">← Edit</button>
+    <div class="game-info" id="game-info-label"></div>
+  </div>
+  <div class="summary-bar" id="summary-bar"></div>
+  <div id="shifts-container"></div>
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Playing time totals</div>
+    <table class="totals-table" id="totals-table"></table>
+  </div>
+  <div style="padding-bottom:32px;"></div>
+</div>
+
+<script>
+// Oliver is index 3 — always gets the extra bench-free shift
+const ALL_PLAYERS = [
+  { name: 'Benson' },
+  { name: 'Milo' },
+  { name: 'Zayn' },
+  { name: 'Oliver' },  // index 3 — protected
+  { name: 'Jade' },
+  { name: 'Watson' },
+  { name: 'Leland' },
+  { name: 'Sebastian' },
+];
+const OLIVER_IDX = 3;
+
+const SEG_MIN = 3;
+const HALF_MIN = 15;
+const SEGS_PER_HALF = Math.floor(HALF_MIN / SEG_MIN); // 5 per half, 10 total
+
+let selectedPlayers = new Set();
+let goalieWilling = new Set();
+
+function updateSelectedCount() {
+  const n = selectedPlayers.size;
+  document.getElementById('selected-count').textContent = n + ' selected';
+  document.getElementById('toggle-all-btn').textContent =
+    n === ALL_PLAYERS.length ? 'Deselect all' : 'Select all';
+  document.getElementById('btn-next-1').disabled = n < 5;
+}
+
+function buildPlayerGrid() {
+  const grid = document.getElementById('player-grid');
+  grid.innerHTML = '';
+  ALL_PLAYERS.forEach((p, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'player-tile';
+    tile.setAttribute('role', 'checkbox');
+    tile.setAttribute('aria-checked', 'false');
+    tile.dataset.idx = i;
+
+    const isOliver = i === OLIVER_IDX;
+    tile.innerHTML =
+      '<div class="check-box"><div class="checkmark"></div></div>' +
+      '<div class="player-name">' + p.name + '</div>' +
+      (isOliver ? '<span class="star-badge">⭐</span>' : '');
+
+    function handleToggle(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (selectedPlayers.has(i)) {
+        selectedPlayers.delete(i);
+        goalieWilling.delete(i);
+        tile.classList.remove('selected');
+        tile.setAttribute('aria-checked', 'false');
+      } else {
+        selectedPlayers.add(i);
+        tile.classList.add('selected');
+        tile.setAttribute('aria-checked', 'true');
+      }
+      updateSelectedCount();
+    }
+
+    tile.addEventListener('touchend', handleToggle, { passive: false });
+    tile.addEventListener('click', handleToggle);
+    grid.appendChild(tile);
+  });
+  updateSelectedCount();
+}
+
+function toggleAll() {
+  const allSelected = selectedPlayers.size === ALL_PLAYERS.length;
+  selectedPlayers.clear();
+  goalieWilling.clear();
+  document.querySelectorAll('.player-tile').forEach((tile, i) => {
+    if (!allSelected) {
+      selectedPlayers.add(i);
+      tile.classList.add('selected');
+      tile.setAttribute('aria-checked', 'true');
+    } else {
+      tile.classList.remove('selected');
+      tile.setAttribute('aria-checked', 'false');
+    }
+  });
+  updateSelectedCount();
+}
+
+function buildGoalieGrid() {
+  const grid = document.getElementById('goalie-grid');
+  grid.innerHTML = '';
+  goalieWilling.clear();
+  const players = [...selectedPlayers].sort((a, b) => a - b);
+  players.forEach(idx => {
+    const p = ALL_PLAYERS[idx];
+    const btn = document.createElement('button');
+    btn.className = 'goalie-btn';
+    btn.type = 'button';
+    btn.textContent = p.name;
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (goalieWilling.has(idx)) {
+        goalieWilling.delete(idx);
+        btn.classList.remove('selected');
+      } else {
+        goalieWilling.add(idx);
+        btn.classList.add('selected');
+      }
+      document.getElementById('btn-generate').disabled = goalieWilling.size === 0;
+    });
+    grid.appendChild(btn);
+  });
+  document.getElementById('btn-generate').disabled = true;
+}
+
+function goToGoalie() {
+  buildGoalieGrid();
+  goTo('screen-goalie');
+}
+
+function generateSchedule() {
+  const players = [...selectedPlayers].sort((a, b) => a - b);
+  const goalies = [...goalieWilling];
+  const total = SEGS_PER_HALF * 2; // 10 shifts
+  const n = players.length;
+  const oliverLocal = players.indexOf(OLIVER_IDX); // -1 if not playing today
+
+  let fieldCnt = new Array(n).fill(0);
+  let gkCnt = new Array(n).fill(0);
+  const localIdx = idx => players.indexOf(idx);
+  const segs = [];
+
+  // With 8 players, 5 on field, 3 bench each shift:
+  // Over 10 shifts each player gets ~6-7 shifts on field (18-21 min).
+  // Oliver gets field time in every single shift — he sits bench 0 times.
+  // Mathematically: 10 shifts x 5 spots = 50 field slots / 8 players = 6.25 avg.
+  // Oliver takes 7 slots (all 10 minus 3 as GK if needed, but always on field).
+  // We enforce this by never putting Oliver on the bench.
+
+  for (let s = 0; s < total; s++) {
+    // Pick goalie
+    let gkGlobal = goalies.reduce((best, g) => {
+      const li = localIdx(g), lb = localIdx(best);
+      if (gkCnt[li] < gkCnt[lb]) return g;
+      if (gkCnt[li] === gkCnt[lb] && fieldCnt[li] < fieldCnt[lb]) return g;
+      return best;
+    }, goalies[0]);
+
+    const gkLoc = localIdx(gkGlobal);
+    gkCnt[gkLoc]++;
+    fieldCnt[gkLoc]++;
+
+    // Remaining players sorted by least field time
+    let rest = players
+      .filter(p => p !== gkGlobal)
+      .sort((a, b) => {
+        // Oliver always gets priority — sort him to the top
+        if (a === OLIVER_IDX) return -1;
+        if (b === OLIVER_IDX) return 1;
+        const la = localIdx(a), lb2 = localIdx(b);
+        return fieldCnt[la] - fieldCnt[lb2] || la - lb2;
+      });
+
+    const onField = rest.slice(0, 4);
+    const bench = rest.slice(4);
+    onField.forEach(p => fieldCnt[localIdx(p)]++);
+    segs.push({ gk: gkGlobal, field: onField, bench, fc: [...fieldCnt], gc: [...gkCnt] });
+  }
+
+  renderResults(segs, players);
+  goTo('screen-results');
+}
+
+function renderResults(segs, players) {
+  const goalieCount = [...goalieWilling].length;
+  document.getElementById('summary-bar').innerHTML =
+    '<div class="sbar-item"><div class="sbar-val">' + segs.length + '</div><div class="sbar-lbl">Shifts</div></div>' +
+    '<div class="sbar-item"><div class="sbar-val">' + SEG_MIN + 'm</div><div class="sbar-lbl">Per shift</div></div>' +
+    '<div class="sbar-item"><div class="sbar-val">' + players.length + '</div><div class="sbar-lbl">Players</div></div>' +
+    '<div class="sbar-item"><div class="sbar-val">' + goalieCount + '</div><div class="sbar-lbl">GK pool</div></div>';
+
+  document.getElementById('game-info-label').innerHTML =
+    '<strong>' + players.length + ' players</strong> · 30 min game';
+
+  const container = document.getElementById('shifts-container');
+  container.innerHTML = '';
+
+  segs.forEach((seg, i) => {
+    if (i === SEGS_PER_HALF) {
+      const bar = document.createElement('div');
+      bar.className = 'halftime-bar';
+      bar.innerHTML = '<span class="halftime-label">Halftime</span>';
+      container.appendChild(bar);
+    }
+
+    const halfNum = i < SEGS_PER_HALF ? 1 : 2;
+    const localI = i < SEGS_PER_HALF ? i : i - SEGS_PER_HALF;
+    const startMin = localI * SEG_MIN;
+    const endMin = Math.min(startMin + SEG_MIN, HALF_MIN);
+    const gkP = ALL_PLAYERS[seg.gk];
+
+    const pillClass = idx => {
+      if (idx === OLIVER_IDX) return 'player-pill oliver-pill';
+      return 'player-pill';
+    };
+
+    const fieldNames = seg.field.map(idx => {
+      const p = ALL_PLAYERS[idx];
+      return '<span class="' + pillClass(idx) + '">' + p.name + '</span>';
+    }).join('');
+
+    const gkPillClass = seg.gk === OLIVER_IDX ? 'player-pill gk-pill oliver-pill' : 'player-pill gk-pill';
+
+    const benchHTML = seg.bench.length > 0
+      ? seg.bench.map(idx => {
+          const p = ALL_PLAYERS[idx];
+          return '<span class="' + pillClass(idx) + '">' + p.name + '</span>';
+        }).join('')
+      : '<span style="font-size:12px;color:var(--text-3)">—</span>';
+
+    const card = document.createElement('div');
+    card.className = 'shift-card';
+    card.innerHTML =
+      '<div class="shift-header">' +
+        '<div class="shift-num">' + (i + 1) + '</div>' +
+        '<div class="shift-meta">' +
+          '<div class="shift-label">Shift ' + (i + 1) + '</div>' +
+          '<div class="shift-time">' + (halfNum === 1 ? '1st' : '2nd') + ' half · min ' + startMin + '–' + endMin + '</div>' +
+        '</div>' +
+        '<span class="half-badge">' + (halfNum === 1 ? '1st' : '2nd') + '</span>' +
+      '</div>' +
+      '<div class="shift-body">' +
+        '<div class="field-row">' +
+          '<span class="field-label">GK</span>' +
+          '<span class="' + gkPillClass + '">' + gkP.name + '</span>' +
+        '</div>' +
+        '<div class="field-row">' +
+          '<span class="field-label">Field</span>' +
+          fieldNames +
+        '</div>' +
+        (seg.bench.length > 0 ?
+          '<div class="field-row">' +
+            '<span class="field-label" style="color:var(--text-3)">Bench</span>' +
+            benchHTML +
+          '</div>' : '') +
+      '</div>';
+    container.appendChild(card);
+  });
+
+  const lastSeg = segs[segs.length - 1];
+  const maxFieldMins = Math.max(...lastSeg.fc) * SEG_MIN;
+  const table = document.getElementById('totals-table');
+  table.innerHTML =
+    '<thead><tr>' +
+      '<th>Player</th>' +
+      '<th style="text-align:left">Progress</th>' +
+      '<th>Mins</th>' +
+    '</tr></thead><tbody id="totals-body"></tbody>';
+
+  const tbody = table.querySelector('tbody');
+  const localIdx = idx => players.indexOf(idx);
+
+  // Sort totals: Oliver first, rest by index
+  const sorted = [...players].sort((a, b) => {
+    if (a === OLIVER_IDX) return -1;
+    if (b === OLIVER_IDX) return 1;
+    return a - b;
+  });
+
+  sorted.forEach(idx => {
+    const p = ALL_PLAYERS[idx];
+    const li = localIdx(idx);
+    const mins = lastSeg.fc[li] * SEG_MIN;
+    const gkMins = lastSeg.gc[li] * SEG_MIN;
+    const pct = maxFieldMins > 0 ? Math.round((mins / maxFieldMins) * 100) : 0;
+    const isOliver = idx === OLIVER_IDX;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' +
+        '<span class="tot-name"' + (isOliver ? ' style="color:#FFD264"' : '') + '>' +
+          p.name + (isOliver ? ' ⭐' : '') +
+        '</span>' +
+        (gkMins > 0 ? '<span class="tot-gk">GK ' + gkMins + 'm</span>' : '') +
+        (isOliver ? '<span class="tot-oliver">Coach\'s kid</span>' : '') +
+      '</td>' +
+      '<td><span class="bar-wrap"><span class="bar-fill" style="width:' + pct + '%"></span></span></td>' +
+      '<td><span class="tot-mins">' + mins + 'm</span></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+buildPlayerGrid();
+</script>
+</body>
+</html>
